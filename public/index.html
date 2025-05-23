@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-Shirt Store</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <h1 class="logo">T-Shirt Store</h1>
+      <ul class="nav-links">
+        <li><a href="#products">Products</a></li>
+        <li><a href="#order-form">Order</a></li>
+        <li><a href="#cart">Cart</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <section id="products">
+      <h2>Our T-Shirts</h2>
+      <div class="product-grid">
+        <div class="product-card" data-name="Classic Tee">
+          <img src="https://via.placeholder.com/300x300?text=Classic+Tee" alt="Classic Tee">
+          <h3>Classic Tee</h3>
+          <p>$20.00</p>
+        </div>
+        <div class="product-card" data-name="V-Neck Tee">
+          <img src="https://via.placeholder.com/300x300?text=V-Neck+Tee" alt="V-Neck Tee">
+          <h3>V-Neck Tee</h3>
+          <p>$22.00</p>
+        </div>
+        <div class="product-card" data-name="Long Sleeve Tee">
+          <img src="https://via.placeholder.com/300x300?text=Long+Sleeve+Tee" alt="Long Sleeve Tee">
+          <h3>Long Sleeve Tee</h3>
+          <p>$25.00</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="order-form">
+      <h2>Place Your Order</h2>
+      <form id="orderForm">
+        <input type="text" name="name" placeholder="Your Name" required />
+        <input type="email" name="email" placeholder="Your Email" required />
+        <select name="product" required>
+          <option value="Classic Tee">Classic Tee</option>
+          <option value="V-Neck Tee">V-Neck Tee</option>
+          <option value="Long Sleeve Tee">Long Sleeve Tee</option>
+        </select>
+        <select name="size" required>
+          <option value="S">Small</option>
+          <option value="M">Medium</option>
+          <option value="L">Large</option>
+          <option value="XL">XL</option>
+        </select>
+        <input type="number" name="quantity" placeholder="Quantity" min="1" required />
+        <button type="submit">Submit Order</button>
+      </form>
+    </section>
+
+    <section id="cart">
+      <h2>Your Cart</h2>
+      <ul id="cart-items"></ul>
+      <button id="checkout-btn">Checkout</button>
+    </section>
+  </main>
+
+  <div id="popup" class="popup hidden">
+    <div class="popup-content">
+      <span class="close-btn">&times;</span>
+      <h3 id="popup-title"></h3>
+      <label for="popup-size">Size:</label>
+      <select id="popup-size">
+        <option value="S">Small</option>
+        <option value="M">Medium</option>
+        <option value="L">Large</option>
+        <option value="XL">XL</option>
+      </select>
+      <label for="popup-quantity">Quantity:</label>
+      <input type="number" id="popup-quantity" value="1" min="1" />
+      <button id="quick-order-btn">Add to Cart</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 T-Shirt Store. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const cart = [];
+
+    document.getElementById('orderForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      const response = await fetch('/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      alert(result.message);
+    });
+
+    let selectedProduct = '';
+
+    document.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', () => {
+        selectedProduct = card.dataset.name;
+        document.getElementById('popup-title').innerText = selectedProduct;
+        document.getElementById('popup').classList.remove('hidden');
+      });
+    });
+
+    document.querySelector('.close-btn').addEventListener('click', () => {
+      document.getElementById('popup').classList.add('hidden');
+    });
+
+    document.getElementById('quick-order-btn').addEventListener('click', () => {
+      const size = document.getElementById('popup-size').value;
+      const quantity = document.getElementById('popup-quantity').value;
+      cart.push({ product: selectedProduct, size, quantity });
+      updateCartDisplay();
+      document.getElementById('popup').classList.add('hidden');
+    });
+
+    document.getElementById('checkout-btn').addEventListener('click', async () => {
+      if (cart.length === 0) {
+        alert('Your cart is empty.');
+        return;
+      }
+      const response = await fetch('/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ cart })
+      });
+      const result = await response.json();
+      alert(result.message);
+      cart.length = 0;
+      updateCartDisplay();
+    });
+
+    function updateCartDisplay() {
+      const cartList = document.getElementById('cart-items');
+      cartList.innerHTML = '';
+      cart.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.quantity}x ${item.product} (Size: ${item.size})`;
+        cartList.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
